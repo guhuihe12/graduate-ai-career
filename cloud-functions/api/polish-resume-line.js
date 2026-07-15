@@ -1,23 +1,40 @@
 import { polishResumeLine } from '../../server/index.mjs'
 
 export default async function onRequest(context) {
-  if (context.request.method !== 'POST') {
+  if (!['GET', 'POST'].includes(context.request.method)) {
     return json({ error: 'Method not allowed' }, 405)
   }
 
-  return onRequestPost(context)
+  return handleRequest(context)
 }
 
 export async function onRequestPost(context) {
+  return handleRequest(context)
+}
+
+export async function onRequestGet(context) {
+  return handleRequest(context)
+}
+
+async function handleRequest(context) {
   syncEnv(context)
 
   try {
-    const body = await context.request.json()
+    const body = await readBody(context)
     const result = await polishResumeLine(body)
     return json(result)
   } catch (error) {
     return jsonError(error)
   }
+}
+
+async function readBody(context) {
+  if (context.request.method === 'GET') {
+    const payload = new URL(context.request.url).searchParams.get('payload')
+    return payload ? JSON.parse(payload) : {}
+  }
+
+  return context.request.json()
 }
 
 function syncEnv(context) {

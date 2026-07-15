@@ -210,7 +210,7 @@ const API_BASE_URL = (
   (import.meta.env.PROD ? '' : 'http://127.0.0.1:8787')
 ).replace(/\/$/, '')
 
-function apiUrl(path: string) {
+function apiUrl(path: string, extraParams?: Record<string, string>) {
   const url = `${API_BASE_URL}${path}`
   if (typeof window === 'undefined') return url
 
@@ -220,9 +220,28 @@ function apiUrl(path: string) {
     const value = currentParams.get(key)
     if (value) params.set(key, value)
   }
+  for (const [key, value] of Object.entries(extraParams || {})) {
+    params.set(key, value)
+  }
 
   const query = params.toString()
   return query ? `${url}?${query}` : url
+}
+
+function shouldUseQueryApi() {
+  return typeof window !== 'undefined' && window.location.hostname.includes('edgeone.cool')
+}
+
+function requestApi(path: string, body: unknown) {
+  if (shouldUseQueryApi()) {
+    return fetch(apiUrl(path, { payload: JSON.stringify(body) }))
+  }
+
+  return fetch(apiUrl(path), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
 }
 
 function App() {
@@ -277,15 +296,11 @@ function App() {
     setPolishing(true)
     setResumeNotice('')
     try {
-      const response = await fetch(apiUrl('/api/polish-resume-line'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await requestApi('/api/polish-resume-line', {
           raw: rawLine,
           section: targetSection,
           targetRole: resumeProfile.targetRole,
           profile: resumeProfile,
-        }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || '生成失败')
@@ -330,14 +345,10 @@ function App() {
     setRecommendLoading(true)
     setRecommendError('')
     try {
-      const response = await fetch(apiUrl('/api/recommend-jobs'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await requestApi('/api/recommend-jobs', {
           profile: careerProfile,
           profileForm: careerForm,
           resume: resumeSectionsToText(resumeSections),
-        }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.setup || data.error || '推荐失败')
