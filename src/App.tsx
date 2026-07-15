@@ -205,7 +205,10 @@ const defaultApplications: Application[] = [
   },
 ]
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8787').replace(/\/$/, '')
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? '' : 'http://127.0.0.1:8787')
+).replace(/\/$/, '')
 
 function apiUrl(path: string) {
   return `${API_BASE_URL}${path}`

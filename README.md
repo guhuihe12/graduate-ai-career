@@ -27,7 +27,7 @@ CORS_ORIGIN=http://127.0.0.1:5173,http://localhost:5173
 VITE_API_BASE_URL=http://127.0.0.1:8787
 ```
 
-3. 启动后端 API
+3. 启动本地 API
 
 ```bash
 npm run api
@@ -45,54 +45,42 @@ npm run dev
 http://127.0.0.1:5173/
 ```
 
-## 让别人访问
+## Vercel 一站式部署
 
-不能直接把 `127.0.0.1` 发给别人。正式给别人用，需要部署前端和后端。
+这个项目已经支持 Vercel Functions，不需要单独部署 Render 后端。
 
-推荐方式：
+Vercel 会自动把这些接口部署成云函数：
 
-- 前端：Vercel 或 Netlify
-- 后端：Render、Railway、Fly.io 或自己的云服务器
-
-### 前端环境变量
-
-在前端部署平台填写：
-
-```bash
-VITE_API_BASE_URL=https://你的后端域名
+```text
+/api/health
+/api/polish-resume-line
+/api/recommend-jobs
 ```
 
-例如：
+### 在 Vercel 填环境变量
 
-```bash
-VITE_API_BASE_URL=https://offerpilot-api.onrender.com
-```
-
-### 后端环境变量
-
-在后端部署平台填写：
+只需要填模型相关变量：
 
 ```bash
 AI_API_KEY=你的模型密钥
-AI_BASE_URL=https://api.openai.com/v1
-AI_MODEL=gpt-4o-mini
-API_HOST=0.0.0.0
-CORS_ORIGIN=https://你的前端域名
+AI_BASE_URL=https://api.deepseek.com/v1
+AI_MODEL=deepseek-chat
 ```
 
-如果后端平台自动提供 `PORT`，不用手动填 `API_PORT`。
+如果你用其他 OpenAI 兼容模型，就换成对应的 `AI_BASE_URL` 和 `AI_MODEL`。
 
-例如：
+上线到 Vercel 时，`VITE_API_BASE_URL` 可以不填。前端会自动调用同一个 Vercel 域名下的 `/api`。
+
+### Vercel 构建配置
+
+通常 Vercel 会自动识别 Vite。确认配置如下：
 
 ```bash
-CORS_ORIGIN=https://offerpilot.vercel.app
+Build Command: npm run build
+Output Directory: dist
 ```
 
-如果有多个前端域名，用逗号隔开：
-
-```bash
-CORS_ORIGIN=https://offerpilot.vercel.app,https://offerpilot.netlify.app
-```
+部署成功后，别人打开 Vercel 给你的网址就可以使用网站。
 
 ## 常用命令
 

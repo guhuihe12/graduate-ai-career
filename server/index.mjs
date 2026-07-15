@@ -1,57 +1,57 @@
 import { createServer } from 'node:http'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const PORT = Number(process.env.PORT ?? process.env.API_PORT ?? 8787)
 const HOST = process.env.API_HOST || '127.0.0.1'
 
 loadDotEnv()
 
-const server = createServer(async (req, res) => {
-  setCors(res, req)
+if (isMainModule()) {
+  const server = createServer(async (req, res) => {
+    setCors(res, req)
 
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204)
-    res.end()
-    return
-  }
-
-  try {
-    if (req.method === 'GET' && req.url === '/api/health') {
-      sendJson(res, 200, { ok: true, model: process.env.AI_MODEL || null })
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204)
+      res.end()
       return
     }
 
-    if (req.method === 'POST' && req.url === '/api/recommend-jobs') {
-      const body = await readJson(req)
-      const result = await recommendJobs(body)
-      sendJson(res, 200, result)
-      return
+    try {
+      if (req.method === 'GET' && req.url === '/api/health') {
+        sendJson(res, 200, getHealth())
+        return
+      }
+
+      if (req.method === 'POST' && req.url === '/api/recommend-jobs') {
+        const body = await readJson(req)
+        const result = await recommendJobs(body)
+        sendJson(res, 200, result)
+        return
+      }
+
+      if (req.method === 'POST' && req.url === '/api/polish-resume-line') {
+        const body = await readJson(req)
+        const result = await polishResumeLine(body)
+        sendJson(res, 200, result)
+        return
+      }
+
+      sendJson(res, 404, { error: 'Not found' })
+    } catch (error) {
+      sendError(res, error)
     }
+  })
 
-    if (req.method === 'POST' && req.url === '/api/polish-resume-line') {
-      const body = await readJson(req)
-      const result = await polishResumeLine(body)
-      sendJson(res, 200, result)
-      return
-    }
+  server.listen(PORT, HOST, () => {
+    console.log(`OfferPilot API listening on http://${HOST}:${PORT}`)
+  })
+}
 
-    sendJson(res, 404, { error: 'Not found' })
-  } catch (error) {
-    const status = error.statusCode || 500
-    sendJson(res, status, {
-      error: error.message || 'Server error',
-      setup:
-        status === 401 || status === 400
-          ? '请在项目根目录创建 .env，并配置 AI_API_KEY、AI_BASE_URL、AI_MODEL。'
-          : undefined,
-    })
-  }
-})
-
-server.listen(PORT, HOST, () => {
-  console.log(`OfferPilot API listening on http://${HOST}:${PORT}`)
-})
+function isMainModule() {
+  return process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]
+}
 
 function loadDotEnv() {
   const file = join(process.cwd(), '.env')
@@ -92,6 +92,21 @@ function splitOrigins(text) {
 function sendJson(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
   res.end(JSON.stringify(data))
+}
+
+function sendError(res, error) {
+  const status = error.statusCode || 500
+  sendJson(res, status, {
+    error: error.message || 'Server error',
+    setup:
+      status === 401 || status === 400
+        ? '请在项目根目录创建 .env，并配置 AI_API_KEY、AI_BASE_URL、AI_MODEL。'
+        : undefined,
+  })
+}
+
+function getHealth() {
+  return { ok: true, model: process.env.AI_MODEL || null }
 }
 
 function readJson(req) {
@@ -672,3 +687,5 @@ function decodeHtml(text) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
 }
+
+export { getHealth, polishResumeLine, recommendJobs }
