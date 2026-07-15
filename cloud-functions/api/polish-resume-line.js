@@ -1,5 +1,13 @@
 import { polishResumeLine } from '../../server/index.mjs'
 
+export default async function onRequest(context) {
+  if (context.request.method !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405)
+  }
+
+  return onRequestPost(context)
+}
+
 export async function onRequestPost(context) {
   syncEnv(context)
 

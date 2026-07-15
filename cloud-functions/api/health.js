@@ -1,5 +1,9 @@
 import { getHealth } from '../../server/index.mjs'
 
+export default function onRequest(context) {
+  return onRequestGet(context)
+}
+
 export function onRequestGet(context) {
   syncEnv(context)
   return json(getHealth())

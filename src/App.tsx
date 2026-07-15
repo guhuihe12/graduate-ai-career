@@ -211,7 +211,18 @@ const API_BASE_URL = (
 ).replace(/\/$/, '')
 
 function apiUrl(path: string) {
-  return `${API_BASE_URL}${path}`
+  const url = `${API_BASE_URL}${path}`
+  if (typeof window === 'undefined') return url
+
+  const params = new URLSearchParams()
+  const currentParams = new URLSearchParams(window.location.search)
+  for (const key of ['eo_token', 'eo_time']) {
+    const value = currentParams.get(key)
+    if (value) params.set(key, value)
+  }
+
+  const query = params.toString()
+  return query ? `${url}?${query}` : url
 }
 
 function App() {
