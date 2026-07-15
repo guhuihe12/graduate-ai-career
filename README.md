@@ -45,11 +45,11 @@ npm run dev
 http://127.0.0.1:5173/
 ```
 
-## Vercel 一站式部署
+## 腾讯云 EdgeOne Pages 部署
 
-这个项目已经支持 Vercel Functions，不需要单独部署 Render 后端。
+这个项目已经支持 EdgeOne Pages Functions，不需要单独部署后端服务器。
 
-Vercel 会自动把这些接口部署成云函数：
+EdgeOne Pages 会把这些接口部署成云函数：
 
 ```text
 /api/health
@@ -57,7 +57,7 @@ Vercel 会自动把这些接口部署成云函数：
 /api/recommend-jobs
 ```
 
-### 在 Vercel 填环境变量
+### 在 EdgeOne Pages 填环境变量
 
 只需要填模型相关变量：
 
@@ -69,18 +69,44 @@ AI_MODEL=deepseek-chat
 
 如果你用其他 OpenAI 兼容模型，就换成对应的 `AI_BASE_URL` 和 `AI_MODEL`。
 
-上线到 Vercel 时，`VITE_API_BASE_URL` 可以不填。前端会自动调用同一个 Vercel 域名下的 `/api`。
+上线到 EdgeOne Pages 时，`VITE_API_BASE_URL` 可以不填。前端会自动调用同一个域名下的 `/api`。
 
-### Vercel 构建配置
+### EdgeOne Pages 构建配置
 
-通常 Vercel 会自动识别 Vite。确认配置如下：
+从 GitHub 导入仓库后，确认配置如下：
 
 ```bash
+Framework: Vite
 Build Command: npm run build
 Output Directory: dist
+Root Directory: ./
 ```
 
-部署成功后，别人打开 Vercel 给你的网址就可以使用网站。
+部署成功后，别人打开 EdgeOne Pages 给你的网址就可以使用网站。
+
+### API 测试
+
+部署完成后打开：
+
+```text
+https://你的域名/api/health
+```
+
+如果看到类似内容，说明云函数和环境变量正常：
+
+```json
+{"ok":true,"model":"deepseek-chat"}
+```
+
+## Vercel 部署
+
+项目也保留了 Vercel Functions 入口。如果你要部署到 Vercel，同样只需要填：
+
+```bash
+AI_API_KEY=你的模型密钥
+AI_BASE_URL=https://api.deepseek.com/v1
+AI_MODEL=deepseek-chat
+```
 
 ## 常用命令
 
@@ -90,4 +116,3 @@ npm run api
 npm run build
 npm run lint
 ```
-
